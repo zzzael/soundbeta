@@ -26,7 +26,7 @@
         }
 
         #controls-container {
-            display: none; /* Hide initially until "Load Tracks" is clicked */
+            display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -44,7 +44,9 @@
             background-color: transparent;
             border: none;
             cursor: pointer;
-            margin: 0 20px;
+            margin: 0 10px;
+            color: #000;
+            padding: 10px 20px;
         }
 
         .controls button:hover {
@@ -90,7 +92,7 @@
         }
 
         .blur-overlay {
-            display: none; /* Blur is hidden by default */
+            display: none;
             position: absolute;
             top: 0;
             left: 0;
@@ -131,11 +133,6 @@
 
     <!-- Controls Container (Initially Hidden) -->
     <div id="controls-container">
-        <div class="controls">
-            <button id="pause-button">[ PAUSE ]</button>
-            <button id="play-button">[ PLAY ]</button>
-        </div>
-
         <div class="stems">
             <div class="stem-label">VOCALS</div>
             <input type="range" id="vocals-slider" min="0" max="100" value="100">
@@ -145,6 +142,12 @@
             <input type="range" id="other-slider" min="0" max="100" value="100">
             <div class="stem-label">DRUMS</div>
             <input type="range" id="drums-slider" min="0" max="100" value="100">
+        </div>
+
+        <!-- Move buttons below sliders -->
+        <div class="controls">
+            <button id="pause-button">[ PAUSE ]</button>
+            <button id="play-button">[ PLAY ]</button>
         </div>
 
         <div id="show-tracklist-button">[ SHOW TRACKLIST ]</div>
@@ -173,6 +176,10 @@
     </div>
 
     <script>
+        let audioContext;
+        let audioElements = {};
+        let gainNodes = {};
+
         const loadTracksButton = document.getElementById('load-tracks-button');
         const controlsContainer = document.getElementById('controls-container');
         const showTracklistButton = document.getElementById('show-tracklist-button');
@@ -207,8 +214,6 @@
             "MY SOUL": "/vultures2/MY_SOUL/"
         };
 
-        let audioElements = {};
-
         document.querySelectorAll('.tracklist li').forEach(track => {
             track.addEventListener('click', () => {
                 const trackName = track.getAttribute('data-track');
@@ -228,11 +233,17 @@
             });
         });
 
+        function initializeAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
         function loadStems(trackName) {
             clearStems();
+            initializeAudioContext();
 
             const basePath = tracks[trackName];
-
             const stemFiles = {
                 vocals: `${basePath}vocals.wav`,
                 bass: `${basePath}bass.wav`,
@@ -243,64 +254,69 @@
             for (const [stem, path] of Object.entries(stemFiles)) {
                 const audio = new Audio(path);
                 audio.loop = true;
-                audioElements[stem] = audio;
-                // Set initial volume from slider
-                audio.volume = document.getElementById(`${stem}-slider`).value / 100;
-            }
+
+                // Create MediaElementSource and connect it to a GainNode
+                const track = audioContext.createMediaElementSource(audio);
+                const gainNode = audioContext.createGain();
+
+                track.connect(gainNode).connect(audioContext.destination);
+            // Set initial volume based on the slider
+            gainNode.gain.value = document.getElementById(`${stem}-slider`).value / 100;
+
+            audioElements[stem] = audio;
+            gainNodes[stem] = gainNode;
         }
 
-        function clearStems() {
-            for (const audioElement of Object.values(audioElements)) {
-                audioElement.pause();
+        setupVolumeControls();
+    }
+
+    function setupVolumeControls() {
+        document.getElementById('vocals-slider').addEventListener('input', (e) => {
+            gainNodes['vocals'].gain.value = e.target.value / 100;
+        });
+
+        document.getElementById('bass-slider').addEventListener('input', (e) => {
+            gainNodes['bass'].gain.value = e.target.value / 100;
+        });
+
+        document.getElementById('other-slider').addEventListener('input', (e) => {
+            gainNodes['other'].gain.value = e.target.value / 100;
+        });
+
+        document.getElementById('drums-slider').addEventListener('input', (e) => {
+            gainNodes['drums'].gain.value = e.target.value / 100;
+        });
+    }
+
+    function clearStems() {
+        for (const stem in audioElements) {
+            if (audioElements[stem]) {
+                audioElements[stem].pause();
+                audioElements[stem].currentTime = 0;
             }
-            audioElements = {};
         }
+        audioElements = {};
+        gainNodes = {};
+    }
 
-        document.getElementById('play-button').addEventListener('click', () => {
-            for (const audioElement of Object.values(audioElements)) {
-                audioElement.play();
+    const playButton = document.getElementById('play-button');
+    const pauseButton = document.getElementById('pause-button');
+
+    playButton.addEventListener('click', () => {
+        for (const stem in audioElements) {
+            if (audioElements[stem]) {
+                audioElements[stem].play();
             }
-        });
+        }
+    });
 
-        document.getElementById('pause-button').addEventListener('click', () => {
-            for (const audioElement of Object.values(audioElements)) {
-                audioElement.pause();
+    pauseButton.addEventListener('click', () => {
+        for (const stem in audioElements) {
+            if (audioElements[stem]) {
+                audioElements[stem].pause();
             }
-        });
-
-        document.getElementById('vocals-slider').addEventListener('input', function () {
-            if (audioElements.vocals) {
-                audioElements.vocals.volume = this.value / 100;
-            }
-        });
-
-        document.getElementById('bass-slider').addEventListener('input', function () {
-            if (audioElements.bass) {
-                audioElements.bass.volume = this.value / 100;
-            }
-        });
-
-        document.getElementById('other-slider').addEventListener('input', function () {
-            if (audioElements.other) {
-                audioElements.other.volume = this.value / 100;
-            }
-        });
-
-        document.getElementById('drums-slider').addEventListener('input', function () {
-            if (audioElements.drums) {
-                audioElements.drums.volume = this.value / 100;
-            }
-        });
-
-        // Ensure sliders set the correct volume even if the user starts playing audio
-        document.querySelectorAll('.stems input[type="range"]').forEach(slider => {
-            slider.addEventListener('input', function() {
-                const stem = this.id.replace('-slider', '');
-                if (audioElements[stem]) {
-                    audioElements[stem].volume = this.value / 100;
-                }
-            });
-        });
-    </script>
+        }
+    });
+</script>
 </body>
 </html>
