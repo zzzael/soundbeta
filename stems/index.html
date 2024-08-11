@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stem Player</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Helvetica:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Helvetica', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        #load-tracks-prompt {
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .controls, .stems, .tracklist {
+            display: none;
+        }
+
+        .controls button {
+            font-size: 16px;
+            font-weight: bold;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+            margin: 0 10px;
+        }
+
+        .controls button:hover {
+            text-decoration: underline;
+        }
+
+        .stems input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 300px;
+            height: 4px;
+            background: black;
+            outline: none;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .stems input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #000;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .stems input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #000;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .stem-label {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .tracklist {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            text-align: right;
+        }
+
+        .tracklist li {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+            cursor: pointer;
+            color: grey;
+            transition: color 0.3s ease;
+        }
+
+        .tracklist li.active {
+            color: black;
+        }
+
+        .layout {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .left, .center, .right {
+            flex: 1;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+            padding-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="load-tracks-prompt">[ LOAD TRACKS ]</div>
+
+    <div class="layout">
+        <div class="left">
+            <div class="stems">
+                <div class="stem-label">VOCALS</div>
+                <input type="range" id="vocals-slider" min="0" max="100" value="100">
+                <div class="stem-label">BASS</div>
+                <input type="range" id="bass-slider" min="0" max="100" value="100">
+                <div class="stem-label">OTHER</div>
+                <input type="range" id="other-slider" min="0" max="100" value="100">
+                <div class="stem-label">DRUMS</div>
+                <input type="range" id="drums-slider" min="0" max="100" value="100">
+            </div>
+        </div>
+
+        <div class="center">
+            <div class="controls">
+                <button id="pause-button">[ PAUSE ]</button>
+                <button id="play-button">[ PLAY ]</button>
+            </div>
+        </div>
+
+        <div class="right">
+            <ul class="tracklist">
+                <li data-track="SLIDE">SLIDE</li>
+                <li data-track="TIME MOVING SLOW">TIME MOVING SLOW</li>
+                <li data-track="FIELD TRIP">FIELD TRIP</li>
+                <li data-track="FRIED">FRIED</li>
+                <li data-track="ISABELLA">ISABELLA</li>
+                <li data-track="PROMOTION">PROMOTION</li>
+                <li data-track="HUSBAND">HUSBAND</li>
+                <li data-track="LIFESTYLE">LIFESTYLE</li>
+                <li data-track="FOREVER">FOREVER</li>
+                <li data-track="BOMB">BOMB</li>
+                <li data-track="RIVER">RIVER</li>
+                <li data-track="530">530</li>
+                <li data-track="DEAD">DEAD</li>
+                <li data-track="FOREVER ROLLING">FOREVER ROLLING</li>
+                <li data-track="SKY CITY">SKY CITY</li>
+                <li data-track="MY SOUL">MY SOUL</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const loadTracksPrompt = document.getElementById('load-tracks-prompt');
+        const controls = document.querySelector('.controls');
+        const stems = document.querySelector('.stems');
+        const tracklist = document.querySelector('.tracklist');
+
+        loadTracksPrompt.addEventListener('click', () => {
+            loadTracksPrompt.style.display = 'none';
+            controls.style.display = 'block';
+            stems.style.display = 'block';
+            tracklist.style.display = 'block';
+        });
+
+        const tracks = {
+            "SLIDE": "/vultures2/SLIDE/",
+            "TIME MOVING SLOW": "/vultures2/TIME_MOVING_SLOW/",
+            "FIELD TRIP": "/vultures2/FIELD_TRIP/",
+            "FRIED": "/vultures2/FRIED/",
+            "ISABELLA": "/vultures2/ISABELLA/",
+            "PROMOTION": "/vultures2/PROMOTION/",
+            "HUSBAND": "/vultures2/HUSBAND/",
+            "LIFESTYLE": "/vultures2/LIFESTYLE/",
+            "FOREVER": "/vultures2/FOREVER/",
+            "BOMB": "/vultures2/BOMB/",
+            "RIVER": "/vultures2/RIVER/",
+            "530": "/vultures2/530/",
+            "DEAD": "/vultures2/DEAD/",
+            "FOREVER ROLLING": "/vultures2/FOREVER_ROLLING/",
+            "SKY CITY": "/vultures2/SKY_CITY/",
+            "MY SOUL": "/vultures2/MY_SOUL/"
+        };
+
+        let audioElements = {};
+
+        document.querySelectorAll('.tracklist li').forEach(track => {
+            track.addEventListener('click', () => {
+                const trackName = track.getAttribute('data-track');
+                loadStems(trackName);
+
+                // Update tracklist appearance
+                document.querySelectorAll('.tracklist li').forEach(li => {
+                    li.classList.remove('active');
+                    li.style.color = 'grey';
+                });
+                track.classList.add('active');
+                track.style.color = 'black';
+            });
+        });
+
+        function loadStems(trackName) {
+            clearStems();
+
+            const basePath = tracks[trackName];
+
+            const stemFiles = {
+                vocals: `${basePath}vocals.wav`,
+                bass: `${basePath}bass.wav`,
+                other: `${basePath}other.wav`,
+                drums: `${basePath}drums.wav`
+            };
+
+            for (const [stem, path] of Object.entries(stemFiles)) {
+                audioElements[stem] = new Audio(path);
+                audioElements[stem].volume = 1.0; // Full volume initially
+                audioElements[stem].load();
+            }
+        }
+
+        function clearStems() {
+            for (const audioElement of Object.values(audioElements)) {
+                audioElement.pause();
+                audioElement.currentTime = 0;
+            }
+            audioElements = {};
+        }
+
+        document.getElementById('play-button').addEventListener('click', () => {
+            setTimeout(() => { // Introduce a slight pause to ensure files are loaded
+                for (const audioElement of Object.values(audioElements)) {
+                    audioElement.play();
+                }
+            }, 500); // 500ms delay before playing
+        });
+
+        document.getElementById('pause-button').addEventListener('click', () => {
+            for (const audioElement of Object.values(audioElements)) {
+                audioElement.pause();
+            }
+        });
+
+        document.getElementById('vocals-slider').addEventListener('input', function () {
+            audioElements.vocals.volume = this.value / 100;
+        });
+
+        document.getElementById('bass-slider').addEventListener('input', function () {
+            audioElements.bass.volume = this.value / 100;
+        });
+
+        document.getElementById('other-slider').addEventListener('input', function () {
+            audioElements.other.volume = this.value / 100;
+        });
+
+        document.getElementById('drums -slider').addEventListener('input', function () {
+            audioElements.drums.volume = this.value / 100;
+        });
+    </script>
+</body>
+</html>

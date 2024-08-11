@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:site_name" content="SND">
+    <meta property="og:url" content="https://zzzael.github.io/SND/">
+    <meta property="og:title" content="SND">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="SND IS A UNRELEASED MUSIC SERVICE">
+    <meta property="og:image" content="https://zzzael.github.io/SND/src/metadata.png">
+    <meta property="og:image:secure_url" content="https://zzzael.github.io/SND/src/metadata.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="628">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SND">
+    <meta name="twitter:description" content="SND IS A UNRELEASED MUSIC SERVICE">
+    <title>SND</title>
+    <style>
+        /* Importing local SF Pro font */
+        @font-face {
+            font-family: 'SF Pro';
+            src: url('sfpro.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'SF Pro', sans-serif;
+            background-color: #ffffff; /* Set background color to white */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .date-time {
+            position: absolute;
+            top: 30px; /* Position in the top left */
+            left: 10px;
+            font-size: 13px;
+            color: #000;
+        }
+
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+        }
+
+        .message {
+            font-size: 13px;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .input-container {
+            margin-top: 10px;
+        }
+
+        input[type="text"] {
+            font-family: 'SF Pro', sans-serif;
+            font-size: 13px;
+            padding: 5px;
+            width: 200px;
+            margin-bottom: 10px;
+            border: none;
+            border-bottom: 1px solid #000;
+            outline: none;
+        }
+
+        button {
+            font-family: 'SF Pro', sans-serif;
+            font-size: 13px;
+            padding: 5px 10px;
+            margin-right: 5px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            display: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="date-time" id="date-time">
+        <!-- Date and time will be inserted here by JavaScript -->
+    </div>
+
+    <div class="message-container">
+        <div class="message">
+            SOUND IS ADAPTED TO APPLYING YOUR EMAIL<br><br>
+            PLEASE ENTER IT BELOW, OR SKIP
+        </div>
+        <div class="input-container">
+            <input type="text" id="email-input" placeholder="Enter your email">
+            <br>
+            <button id="skip-button">Skip</button>
+            <button id="submit-button">Submit</button>
+        </div>
+    </div>
+
+    <div id="overlay"></div>
+
+    <script>
+        function formatDateTime() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '');
+            const month = String(now.getMonth() + 1).padStart(2, '');
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const milliseconds = String(Math.floor(now.getMilliseconds() / 10)).padStart(2, '0'); // Two-digit milliseconds
+
+            return `${month} ${day} ${year}\n${hours}:${minutes}:${seconds}:${milliseconds}`;
+        }
+
+        function updateDateTime() {
+            document.getElementById('date-time').textContent = formatDateTime();
+        }
+
+        // Update date and time immediately and then every millisecond
+        updateDateTime();
+        setInterval(updateDateTime, 1); // Update every millisecond for accurate time
+
+        document.getElementById('skip-button').addEventListener('click', () => {
+            window.location.href = 'https://google.com';
+        });
+
+        document.getElementById('submit-button').addEventListener('click', () => {
+            const email = document.getElementById('email-input').value;
+            // Show overlay
+            document.getElementById('overlay').style.display = 'block';
+            // Wait for 10 seconds and then redirect to base URL
+            setTimeout(() => {
+                window.location.href = 'http://localhost:2000/';
+            }, 10000);
+        });
+    </script>
+</body>
+</html>
