@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stem Player</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Helvetica:wght@400;700&display=swap');
-
         body {
             font-family: 'Helvetica', sans-serif;
             background-color: #f0f0f0;
@@ -17,56 +15,69 @@
             justify-content: center;
             height: 100vh;
             text-align: center;
+            position: relative;
         }
 
-        #load-tracks-prompt {
+        #load-tracks-button, #show-tracklist-button {
             font-size: 24px;
             font-weight: bold;
             cursor: pointer;
+            z-index: 2;
         }
 
-        .controls, .stems, .tracklist {
-            display: none;
+        #controls-container {
+            display: none; /* Hide initially until "Load Tracks" is clicked */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
         }
 
         .controls button {
-            font-size: 16px;
+            font-size: 24px;
             font-weight: bold;
             background-color: transparent;
             border: none;
             cursor: pointer;
-            padding: 10px 20px;
-            margin: 0 10px;
+            margin: 0 20px;
         }
 
         .controls button:hover {
             text-decoration: underline;
         }
 
+        .stems {
+            margin-bottom: 20px;
+        }
+
         .stems input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
             width: 300px;
-            height: 4px;
+            height: 6px;
             background: black;
             outline: none;
-            margin: 10px 0;
             cursor: pointer;
         }
 
         .stems input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             background: #000;
             border-radius: 50%;
             cursor: pointer;
         }
 
         .stems input[type="range"]::-moz-range-thumb {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             background: #000;
             border-radius: 50%;
             cursor: pointer;
@@ -74,18 +85,34 @@
 
         .stem-label {
             font-weight: bold;
-            margin-top: 20px;
+            font-size: 20px;
+            margin: 10px 0;
+        }
+
+        .blur-overlay {
+            display: none; /* Blur is hidden by default */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1;
+            display: none;
+            align-items: center;
+            justify-content: center;
         }
 
         .tracklist {
             list-style-type: none;
             padding: 0;
             margin: 0;
-            text-align: right;
+            text-align: center;
         }
 
         .tracklist li {
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
             margin: 10px 0;
             cursor: pointer;
@@ -96,86 +123,71 @@
         .tracklist li.active {
             color: black;
         }
-
-        .layout {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-        }
-
-        .left, .center, .right {
-            flex: 1;
-        }
-
-        .center {
-            text-align: center;
-        }
-
-        .right {
-            text-align: right;
-            padding-right: 20px;
-        }
     </style>
 </head>
 <body>
-    <div id="load-tracks-prompt">[ LOAD TRACKS ]</div>
+    <!-- Load Tracks Button -->
+    <div id="load-tracks-button">[ LOAD TRACKS ]</div>
 
-    <div class="layout">
-        <div class="left">
-            <div class="stems">
-                <div class="stem-label">VOCALS</div>
-                <input type="range" id="vocals-slider" min="0" max="100" value="100">
-                <div class="stem-label">BASS</div>
-                <input type="range" id="bass-slider" min="0" max="100" value="100">
-                <div class="stem-label">OTHER</div>
-                <input type="range" id="other-slider" min="0" max="100" value="100">
-                <div class="stem-label">DRUMS</div>
-                <input type="range" id="drums-slider" min="0" max="100" value="100">
-            </div>
+    <!-- Controls Container (Initially Hidden) -->
+    <div id="controls-container">
+        <div class="controls">
+            <button id="pause-button">[ PAUSE ]</button>
+            <button id="play-button">[ PLAY ]</button>
         </div>
 
-        <div class="center">
-            <div class="controls">
-                <button id="pause-button">[ PAUSE ]</button>
-                <button id="play-button">[ PLAY ]</button>
-            </div>
+        <div class="stems">
+            <div class="stem-label">VOCALS</div>
+            <input type="range" id="vocals-slider" min="0" max="100" value="100">
+            <div class="stem-label">BASS</div>
+            <input type="range" id="bass-slider" min="0" max="100" value="100">
+            <div class="stem-label">OTHER</div>
+            <input type="range" id="other-slider" min="0" max="100" value="100">
+            <div class="stem-label">DRUMS</div>
+            <input type="range" id="drums-slider" min="0" max="100" value="100">
         </div>
 
-        <div class="right">
-            <ul class="tracklist">
-                <li data-track="SLIDE">SLIDE</li>
-                <li data-track="TIME MOVING SLOW">TIME MOVING SLOW</li>
-                <li data-track="FIELD TRIP">FIELD TRIP</li>
-                <li data-track="FRIED">FRIED</li>
-                <li data-track="ISABELLA">ISABELLA</li>
-                <li data-track="PROMOTION">PROMOTION</li>
-                <li data-track="HUSBAND">HUSBAND</li>
-                <li data-track="LIFESTYLE">LIFESTYLE</li>
-                <li data-track="FOREVER">FOREVER</li>
-                <li data-track="BOMB">BOMB</li>
-                <li data-track="RIVER">RIVER</li>
-                <li data-track="530">530</li>
-                <li data-track="DEAD">DEAD</li>
-                <li data-track="FOREVER ROLLING">FOREVER ROLLING</li>
-                <li data-track="SKY CITY">SKY CITY</li>
-                <li data-track="MY SOUL">MY SOUL</li>
-            </ul>
-        </div>
+        <div id="show-tracklist-button">[ SHOW TRACKLIST ]</div>
+    </div>
+
+    <!-- Blur Overlay with Tracklist (Initially Hidden) -->
+    <div class="blur-overlay" id="blur-overlay">
+        <ul class="tracklist">
+            <li data-track="SLIDE">SLIDE</li>
+            <li data-track="TIME MOVING SLOW">TIME MOVING SLOW</li>
+            <li data-track="FIELD TRIP">FIELD TRIP</li>
+            <li data-track="FRIED">FRIED</li>
+            <li data-track="ISABELLA">ISABELLA</li>
+            <li data-track="PROMOTION">PROMOTION</li>
+            <li data-track="HUSBAND">HUSBAND</li>
+            <li data-track="LIFESTYLE">LIFESTYLE</li>
+            <li data-track="FOREVER">FOREVER</li>
+            <li data-track="BOMB">BOMB</li>
+            <li data-track="RIVER">RIVER</li>
+            <li data-track="530">530</li>
+            <li data-track="DEAD">DEAD</li>
+            <li data-track="FOREVER ROLLING">FOREVER ROLLING</li>
+            <li data-track="SKY CITY">SKY CITY</li>
+            <li data-track="MY SOUL">MY SOUL</li>
+        </ul>
     </div>
 
     <script>
-        const loadTracksPrompt = document.getElementById('load-tracks-prompt');
-        const controls = document.querySelector('.controls');
-        const stems = document.querySelector('.stems');
-        const tracklist = document.querySelector('.tracklist');
+        const loadTracksButton = document.getElementById('load-tracks-button');
+        const controlsContainer = document.getElementById('controls-container');
+        const showTracklistButton = document.getElementById('show-tracklist-button');
+        const blurOverlay = document.getElementById('blur-overlay');
 
-        loadTracksPrompt.addEventListener('click', () => {
-            loadTracksPrompt.style.display = 'none';
-            controls.style.display = 'block';
-            stems.style.display = 'block';
-            tracklist.style.display = 'block';
+        // Event listener to load tracks and show controls when the "Load Tracks" button is clicked
+        loadTracksButton.addEventListener('click', () => {
+            loadTracksButton.style.display = 'none';
+            controlsContainer.style.display = 'flex';
+        });
+
+        // Event listener to show the tracklist with blur effect
+        showTracklistButton.addEventListener('click', () => {
+            blurOverlay.style.display = 'flex';
+            showTracklistButton.style.display = 'none';
         });
 
         const tracks = {
@@ -211,6 +223,11 @@
                 });
                 track.classList.add('active');
                 track.style.color = 'black';
+
+                setTimeout(() => {
+                    blurOverlay.style.display = 'none';
+                    showTracklistButton.style.display = 'block';
+                }, 500); // 500ms delay to ensure user sees the selection change
             });
         });
 
@@ -228,25 +245,22 @@
 
             for (const [stem, path] of Object.entries(stemFiles)) {
                 audioElements[stem] = new Audio(path);
-                audioElements[stem].volume = 1.0; // Full volume initially
-                audioElements[stem].load();
+                audioElements[stem].volume = document.getElementById(`${stem}-slider`).value / 100;
+                audioElements[stem].loop = true;
             }
         }
 
         function clearStems() {
             for (const audioElement of Object.values(audioElements)) {
                 audioElement.pause();
-                audioElement.currentTime = 0;
             }
             audioElements = {};
         }
 
         document.getElementById('play-button').addEventListener('click', () => {
-            setTimeout(() => { // Introduce a slight pause to ensure files are loaded
-                for (const audioElement of Object.values(audioElements)) {
-                    audioElement.play();
-                }
-            }, 500); // 500ms delay before playing
+            for (const audioElement of Object.values(audioElements)) {
+                audioElement.play();
+            }
         });
 
         document.getElementById('pause-button').addEventListener('click', () => {
@@ -267,7 +281,7 @@
             audioElements.other.volume = this.value / 100;
         });
 
-        document.getElementById('drums -slider').addEventListener('input', function () {
+        document.getElementById('drums-slider').addEventListener('input', function () {
             audioElements.drums.volume = this.value / 100;
         });
     </script>
