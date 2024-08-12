@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selection</title>
+    <style>
+        body {
+            font-family: 'Helvetica', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            position: relative;
+        }
+
+        .selection-option {
+            font-size: 36px;
+            font-weight: bold;
+            color: black;
+            cursor: pointer;
+            margin: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .selection-option:hover {
+            color: grey;
+        }
+
+        .loading-screen {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div id="vultures" class="selection-option">[ VULTURES 2 ]</div>
+    <div id="donda" class="selection-option">[ DONDA 2 ]</div>
+
+    <div id="loading-screen" class="loading-screen">INTERMISSION</div>
+
+    <script>
+        function showLoadingScreen(destination) {
+            const loadingScreen = document.getElementById('loading-screen');
+            loadingScreen.style.display = 'flex';
+            setTimeout(() => {
+                window.location.href = destination;
+            }, 3000); // 3 seconds delay
+        }
+
+        document.getElementById('vultures').addEventListener('click', () => {
+            showLoadingScreen('/v2stems');
+        });
+
+        document.getElementById('donda').addEventListener('click', () => {
+            showLoadingScreen('/donda2');
+        });
+    </script>
+</body>
+</html>
