@@ -136,11 +136,11 @@
         <div class="stems">
             <div class="stem-label">VOCALS</div>
             <input type="range" id="vocals-slider" min="0" max="100" value="100">
-            <div class="stem-label">BASS</div>
+            <div class="stem-label" id="bass-label">BASS</div>
             <input type="range" id="bass-slider" min="0" max="100" value="100">
             <div class="stem-label">INSTRUMENTAL</div>
             <input type="range" id="INSTRUMENTAL-slider" min="0" max="100" value="100">
-            <div class="stem-label">DRUMS</div>
+            <div class="stem-label" id="drums-label">DRUMS</div>
             <input type="range" id="drums-slider" min="0" max="100" value="100">
         </div>
 
@@ -158,20 +158,20 @@
         <ul class="tracklist">
             <li data-track="TRUE LOVE">TRUE LOVE</li>
             <li data-track="BROKEN ROAD">BROKEN ROAD</li>
-            <!-- <li data-track="FIELD TRIP">FIELD TRIP</li>
-            <li data-track="FRIED">FRIED</li>
-            <li data-track="ISABELLA">ISABELLA</li>
-            <li data-track="PROMOTION">PROMOTION</li>
-            <li data-track="HUSBAND">HUSBAND</li>
-            <li data-track="LIFESTYLE">LIFESTYLE</li>
-            <li data-track="FOREVER">FOREVER</li>
-            <li data-track="BOMB">BOMB</li>
-            <li data-track="RIVER">RIVER</li>
-            <li data-track="530">530</li>
-            <li data-track="DEAD">DEAD</li>
-            <li data-track="FOREVER ROLLING">FOREVER ROLLING</li>
-            <li data-track="SKY CITY">SKY CITY</li>
-            <li data-track="MY SOUL">MY SOUL</li> -->
+            <li data-track="GET LOST">GET LOST</li>
+            <li data-track="TOO EASY">TOO EASY</li>
+            <li data-track="FLOWERS">FLOWERS</li>
+            <li data-track="SECURITY">SECURITY</li>
+            <li data-track="WE DID IT KID">WE DID IT KID</li>
+            <li data-track="PABLO">PABLO</li>
+            <li data-track="LOUIS BAGS">LOUIS BAGS</li>
+            <li data-track="HAPPY">HAPPY</li>
+            <li data-track="SCI-FI">SCI-FI</li>
+            <li data-track="SELFISH">SELFISH</li>
+            <li data-track="LORD LIFT ME UP">LORD LIFT ME UP</li>
+            <li data-track="KEEP IT BURNING">KEEP IT BURNING</li>
+            <li data-track="CITY OF GODS">CITY OF GODS</li>
+            <li data-track="FIRST TIME IN A LONG TIME">FIRST TIME IN A LONG TIME</li>
         </ul>
     </div>
 
@@ -196,22 +196,22 @@
         });
 
         const tracks = {
-            "TRUE LOVE": "/d2stems/TRUE_LOVE/",
+            "TRUE LOVE": "./d2stems/True_Love/",
             "BROKEN ROAD": "./d2stems/Broken_Road/",
-            "FIELD TRIP": "./vultures2/FIELD_TRIP/",
-            "FRIED": "./vultures2/FRIED/",
-            "ISABELLA": "./vultures2/ISABELLA/",
-            "PROMOTION": "./vultures2/PROMOTION/",
-            "HUSBAND": "./vultures2/HUSBAND/",
-            "LIFESTYLE": "/vultures2/LIFESTYLE/",
-            "FOREVER": "/vultures2/FOREVER/",
-            "BOMB": "/vultures2/BOMB/",
-            "RIVER": "/vultures2/RIVER/",
-            "530": "/vultures2/530/",
-            "DEAD": "/vultures2/DEAD/",
-            "FOREVER ROLLING": "/vultures2/FOREVER_ROLLING/",
-            "SKY CITY": "/vultures2/SKY_CITY/",
-            "MY SOUL": "/vultures2/MY_SOUL/"
+            "GET LOST": "./d2stems/Get_Lost/",
+            "TOO EASY": "./d2stems/TooEasy/"
+            // "ISABELLA": "./vultures2/ISABELLA/",
+            // "PROMOTION": "./vultures2/PROMOTION/",
+            // "HUSBAND": "./vultures2/HUSBAND/",
+            // "LIFESTYLE": "/vultures2/LIFESTYLE/",
+            // "FOREVER": "/vultures2/FOREVER/",
+            // "BOMB": "/vultures2/BOMB/",
+            // "RIVER": "/vultures2/RIVER/",
+            // "530": "/vultures2/530/",
+            // "DEAD": "/vultures2/DEAD/",
+            // "FOREVER ROLLING": "/vultures2/FOREVER_ROLLING/",
+            // "SKY CITY": "/vultures2/SKY_CITY/",
+            // "MY SOUL": "/vultures2/MY_SOUL/"
         };
 
         document.querySelectorAll('.tracklist li').forEach(track => {
@@ -225,6 +225,12 @@
                 });
                 track.classList.add('active');
                 track.style.color = 'black';
+
+                if (trackName === 'GET LOST') {
+                    hideBassAndDrums();
+                } else {
+                    showBassAndDrums();
+                }
 
                 setTimeout(() => {
                     blurOverlay.style.display = 'none';
@@ -240,83 +246,112 @@
         }
 
         function loadStems(trackName) {
-            clearStems();
-            initializeAudioContext();
+    clearStems();
+    initializeAudioContext();
 
-            const basePath = tracks[trackName];
-            const stemFiles = {
-                vocals: `${basePath}vocals.mp3`,
-                bass: `${basePath}bass.mp3`,
-                INSTRUMENTAL: `${basePath}INSTRUMENTAL.mp3`,
-                drums: `${basePath}drums.mp3`
-            };
+    const basePath = tracks[trackName];
+    const stemFiles = {
+        vocals: `${basePath}Vocals.mp3`,
+        Instrumental: `${basePath}Instrumental.mp3`
+    };
 
-            for (const [stem, path] of Object.entries(stemFiles)) {
-                const audio = new Audio(path);
-                audio.loop = true;
-
-                // Create MediaElementSource and connect it to a GainNode
-                const track = audioContext.createMediaElementSource(audio);
-                const gainNode = audioContext.createGain();
-
-                track.connect(gainNode).connect(audioContext.destination);
-            // Set initial volume based on the slider
-            gainNode.gain.value = document.getElementById(`${stem}-slider`).value / 100;
-
-            audioElements[stem] = audio;
-            gainNodes[stem] = gainNode;
-        }
-
-        setupVolumeControls();
+    if (trackName !== 'GET LOST') {
+        stemFiles.bass = `${basePath}Bass.mp3`;
+        stemFiles.drums = `${basePath}Drums.mp3`;
     }
 
-    function setupVolumeControls() {
-        document.getElementById('vocals-slider').addEventListener('input', (e) => {
-            gainNodes['vocals'].gain.value = e.target.value / 100;
-        });
+    for (const [stem, file] of Object.entries(stemFiles)) {
+        const audio = new Audio(file);
+        audio.crossOrigin = "anonymous";
+        audio.load();
+        audio.oncanplaythrough = () => audio.readyToPlay = true;
 
-        document.getElementById('bass-slider').addEventListener('input', (e) => {
-            gainNodes['bass'].gain.value = e.target.value / 100;
-        });
+        const track = audioContext.createMediaElementSource(audio);
+        const gainNode = audioContext.createGain();
 
-        document.getElementById('INSTRUMENTAL-slider').addEventListener('input', (e) => {
-            gainNodes['INSTRUMENTAL'].gain.value = e.target.value / 100;
-        });
+        track.connect(gainNode).connect(audioContext.destination);
 
-        document.getElementById('drums-slider').addEventListener('input', (e) => {
-            gainNodes['drums'].gain.value = e.target.value / 100;
-        });
+        // Initialize gain value with a default value if the slider does not exist
+        const slider = document.getElementById(`${stem}-slider`);
+        if (slider) {
+            gainNode.gain.value = slider.value / 100;
+        } else {
+            gainNode.gain.value = 1; // Default value if slider is not present
+        }
+
+        audioElements[stem] = audio;
+        gainNodes[stem] = gainNode;
     }
 
-    function clearStems() {
-        for (const stem in audioElements) {
-            if (audioElements[stem]) {
-                audioElements[stem].pause();
-                audioElements[stem].currentTime = 0;
+    setupVolumeControls();
+}
+
+
+        function setupVolumeControls() {
+            document.getElementById('vocals-slider').addEventListener('input', (e) => {
+                gainNodes['vocals'].gain.value = e.target.value / 100;
+            });
+
+            if (gainNodes['bass']) {
+                document.getElementById('bass-slider').addEventListener('input', (e) => {
+                    gainNodes['bass'].gain.value = e.target.value / 100;
+                });
+            }
+
+            document.getElementById('INSTRUMENTAL-slider').addEventListener('input', (e) => {
+                gainNodes['Instrumental'].gain.value = e.target.value / 100;
+            });
+
+            if (gainNodes['drums']) {
+                document.getElementById('drums-slider').addEventListener('input', (e) => {
+                    gainNodes['drums'].gain.value = e.target.value / 100;
+                });
             }
         }
-        audioElements = {};
-        gainNodes = {};
-    }
 
-    const playButton = document.getElementById('play-button');
-    const pauseButton = document.getElementById('pause-button');
-
-    playButton.addEventListener('click', () => {
-        for (const stem in audioElements) {
-            if (audioElements[stem]) {
-                audioElements[stem].play();
+        function clearStems() {
+            for (const stem in audioElements) {
+                if (audioElements[stem]) {
+                    audioElements[stem].pause();
+                    audioElements[stem].currentTime = 0;
+                }
             }
+            audioElements = {};
+            gainNodes = {};
         }
-    });
 
-    pauseButton.addEventListener('click', () => {
-        for (const stem in audioElements) {
-            if (audioElements[stem]) {
-                audioElements[stem].pause();
-            }
+        function hideBassAndDrums() {
+            document.getElementById('bass-slider').style.display = 'none';
+            document.getElementById('bass-label').style.display = 'none';
+            document.getElementById('drums-slider').style.display = 'none';
+            document.getElementById('drums-label').style.display = 'none';
         }
-    });
-</script>
+
+        function showBassAndDrums() {
+            document.getElementById('bass-slider').style.display = 'block';
+            document.getElementById('bass-label').style.display = 'block';
+            document.getElementById('drums-slider').style.display = 'block';
+            document.getElementById('drums-label').style.display = 'block';
+        }
+
+        const playButton = document.getElementById('play-button');
+        const pauseButton = document.getElementById('pause-button');
+
+        playButton.addEventListener('click', () => {
+            for (const stem in audioElements) {
+                if (audioElements[stem]) {
+                    audioElements[stem].play();
+                }
+            }
+        });
+
+        pauseButton.addEventListener('click', () => {
+            for (const stem in audioElements) {
+                if (audioElements[stem]) {
+                    audioElements[stem].pause();
+                }
+            }
+        });
+    </script>
 </body>
 </html>
