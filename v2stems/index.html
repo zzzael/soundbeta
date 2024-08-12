@@ -161,17 +161,17 @@
             <li data-track="FIELD TRIP">FIELD TRIP</li>
             <li data-track="FRIED">FRIED</li>
             <li data-track="ISABELLA">ISABELLA</li>
-            <li data-track="PROMOTION">PROMOTION</li>
+            <!-- <li data-track="PROMOTION">PROMOTION</li>
             <li data-track="HUSBAND">HUSBAND</li>
-            <li data-track="LIFESTYLE">LIFESTYLE</li>
-            <li data-track="FOREVER">FOREVER</li>
+            <li data-track="LIFESTYLE">LIFESTYLE</li> -->
+            <!-- <li data-track="FOREVER">FOREVER</li> -->
             <li data-track="BOMB">BOMB</li>
-            <li data-track="RIVER">RIVER</li>
+            <!-- <li data-track="RIVER">RIVER</li>
             <li data-track="530">530</li>
             <li data-track="DEAD">DEAD</li>
             <li data-track="FOREVER ROLLING">FOREVER ROLLING</li>
             <li data-track="SKY CITY">SKY CITY</li>
-            <li data-track="MY SOUL">MY SOUL</li>
+            <li data-track="MY SOUL">MY SOUL</li> -->
         </ul>
     </div>
 
@@ -201,17 +201,17 @@
             "FIELD TRIP": "/vultures2/FIELD_TRIP/",
             "FRIED": "/vultures2/FRIED/",
             "ISABELLA": "/vultures2/ISABELLA/",
-            "PROMOTION": "/vultures2/PROMOTION/",
-            "HUSBAND": "/vultures2/HUSBAND/",
-            "LIFESTYLE": "/vultures2/LIFESTYLE/",
-            "FOREVER": "/vultures2/FOREVER/",
-            "BOMB": "/vultures2/BOMB/",
-            "RIVER": "/vultures2/RIVER/",
-            "530": "/vultures2/530/",
-            "DEAD": "/vultures2/DEAD/",
-            "FOREVER ROLLING": "/vultures2/FOREVER_ROLLING/",
-            "SKY CITY": "/vultures2/SKY_CITY/",
-            "MY SOUL": "/vultures2/MY_SOUL/"
+            // "PROMOTION": "/vultures2/PROMOTION/",
+            // "HUSBAND": "/vultures2/HUSBAND/",
+            // "LIFESTYLE": "/vultures2/LIFESTYLE/",
+            // "FOREVER": "/vultures2/FOREVER/",
+            "BOMB": "/vultures2/BOMB/"
+            // "RIVER": "/vultures2/RIVER/",
+            // "530": "/vultures2/530/",
+            // "DEAD": "/vultures2/DEAD/",
+            // "FOREVER ROLLING": "/vultures2/FOREVER_ROLLING/",
+            // "SKY CITY": "/vultures2/SKY_CITY/",
+            // "MY SOUL": "/vultures2/MY_SOUL/"
         };
 
         document.querySelectorAll('.tracklist li').forEach(track => {
@@ -251,6 +251,7 @@
                 drums: `${basePath}drums.wav`
             };
 
+            let sources = [];
             for (const [stem, path] of Object.entries(stemFiles)) {
                 const audio = new Audio(path);
                 audio.loop = true;
@@ -258,65 +259,80 @@
                 // Create MediaElementSource and connect it to a GainNode
                 const track = audioContext.createMediaElementSource(audio);
                 const gainNode = audioContext.createGain();
-
                 track.connect(gainNode).connect(audioContext.destination);
-            // Set initial volume based on the slider
-            gainNode.gain.value = document.getElementById(`${stem}-slider`).value / 100;
 
-            audioElements[stem] = audio;
-            gainNodes[stem] = gainNode;
+                // Set initial volume based on the slider
+                gainNode.gain.value = document.getElementById(`${stem}-slider`).value / 100;
+
+                // Store references
+                audioElements[stem] = audio;
+                gainNodes[stem] = gainNode;
+
+                sources.push(audio);
+            }
+
+            // Wait for all audio elements to be ready to play
+            Promise.all(sources.map(source => new Promise(resolve => {
+                source.oncanplaythrough = resolve;
+            }))).then(() => {
+                document.getElementById('play-button').disabled = false;
+                document.getElementById('pause-button').disabled = false;
+            });
+
+            setupVolumeControls();
         }
 
-        setupVolumeControls();
-    }
+        function setupVolumeControls() {
+            document.getElementById('vocals-slider').addEventListener('input', (e) => {
+                gainNodes['vocals'].gain.value = e.target.value / 100;
+            });
 
-    function setupVolumeControls() {
-        document.getElementById('vocals-slider').addEventListener('input', (e) => {
-            gainNodes['vocals'].gain.value = e.target.value / 100;
-        });
+            document.getElementById('bass-slider').addEventListener('input', (e) => {
+                gainNodes['bass'].gain.value = e.target.value / 100;
+            });
 
-        document.getElementById('bass-slider').addEventListener('input', (e) => {
-            gainNodes['bass'].gain.value = e.target.value / 100;
-        });
+            document.getElementById('other-slider').addEventListener('input', (e) => {
+                gainNodes['other'].gain.value = e.target.value / 100;
+            });
 
-        document.getElementById('other-slider').addEventListener('input', (e) => {
-            gainNodes['other'].gain.value = e.target.value / 100;
-        });
+            document.getElementById('drums-slider').addEventListener('input', (e) => {
+                gainNodes['drums'].gain.value = e.target.value / 100;
+            });
+        }
 
-        document.getElementById('drums-slider').addEventListener('input', (e) => {
-            gainNodes['drums'].gain.value = e.target.value / 100;
-        });
-    }
+        function clearStems() {
+            for (const stem in audioElements) {
+                if (audioElements[stem]) {
+                    audioElements[stem].pause();
+                    audioElements[stem].currentTime = 0;
+                }
+            }
+            audioElements = {};
+            gainNodes = {};
+        }
 
-    function clearStems() {
-        for (const stem in audioElements) {
-            if (audioElements[stem]) {
-                audioElements[stem].pause();
-                audioElements[stem].currentTime = 0;
+        function startAllAudio() {
+            for (const audio of Object.values(audioElements)) {
+                audio.play();
             }
         }
-        audioElements = {};
-        gainNodes = {};
-    }
 
-    const playButton = document.getElementById('play-button');
-    const pauseButton = document.getElementById('pause-button');
-
-    playButton.addEventListener('click', () => {
-        for (const stem in audioElements) {
-            if (audioElements[stem]) {
-                audioElements[stem].play();
+        function stopAllAudio() {
+            for (const audio of Object.values(audioElements)) {
+                audio.pause();
             }
         }
-    });
 
-    pauseButton.addEventListener('click', () => {
-        for (const stem in audioElements) {
-            if (audioElements[stem]) {
-                audioElements[stem].pause();
-            }
-        }
-    });
-</script>
+        const playButton = document.getElementById('play-button');
+        const pauseButton = document.getElementById('pause-button');
+
+        playButton.addEventListener('click', () => {
+            startAllAudio();
+        });
+
+        pauseButton.addEventListener('click', () => {
+            stopAllAudio();
+        });
+    </script>
 </body>
 </html>
