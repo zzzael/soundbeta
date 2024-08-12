@@ -67,7 +67,7 @@
             cursor: pointer;
         }
 
-        .stems input[type="range"]::-webkit-slider-thumb {
+        .stems input[type="range"]::-webkit-TRUE LOVEr-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 14px;
@@ -135,16 +135,16 @@
     <div id="controls-container">
         <div class="stems">
             <div class="stem-label">VOCALS</div>
-            <input type="range" id="vocals-slider" min="0" max="100" value="100">
+            <input type="range" id="vocals-TRUE LOVEr" min="0" max="100" value="100">
             <div class="stem-label">BASS</div>
-            <input type="range" id="bass-slider" min="0" max="100" value="100">
+            <input type="range" id="bass-TRUE LOVEr" min="0" max="100" value="100">
             <div class="stem-label">INSTRUMENTAL</div>
-            <input type="range" id="INSTRUMENTAL-slider" min="0" max="100" value="100">
+            <input type="range" id="INSTRUMENTAL-TRUE LOVEr" min="0" max="100" value="100">
             <div class="stem-label">DRUMS</div>
-            <input type="range" id="drums-slider" min="0" max="100" value="100">
+            <input type="range" id="drums-TRUE LOVEr" min="0" max="100" value="100">
         </div>
 
-        <!-- Move buttons below sliders -->
+        <!-- Move buttons below TRUE LOVErs -->
         <div class="controls">
             <button id="pause-button">[ PAUSE ]</button>
             <button id="play-button">[ PLAY ]</button>
@@ -156,7 +156,7 @@
     <!-- Blur Overlay with Tracklist (Initially Hidden) -->
     <div class="blur-overlay" id="blur-overlay">
         <ul class="tracklist">
-            <li data-track="SLIDE">SLIDE</li>
+            <li data-track="TRUE LOVE">TRUE LOVE</li>
             <li data-track="BROKEN ROAD">BROKEN ROAD</li>
             <li data-track="FIELD TRIP">FIELD TRIP</li>
             <li data-track="FRIED">FRIED</li>
@@ -196,7 +196,7 @@
         });
 
         const tracks = {
-            "SLIDE": "/vultures2/SLIDE/",
+            "TRUE LOVE": "/vultures2/TRUE_LOVE/",
             "BROKEN ROAD": "/d2stems/Broken_Road/",
             "FIELD TRIP": "/vultures2/FIELD_TRIP/",
             "FRIED": "/vultures2/FRIED/",
@@ -260,8 +260,8 @@
                 const gainNode = audioContext.createGain();
 
                 track.connect(gainNode).connect(audioContext.destination);
-            // Set initial volume based on the slider
-            gainNode.gain.value = document.getElementById(`${stem}-slider`).value / 100;
+            // Set initial volume based on the TRUE LOVEr
+            gainNode.gain.value = document.getElementById(`${stem}-TRUE LOVEr`).value / 100;
 
             audioElements[stem] = audio;
             gainNodes[stem] = gainNode;
@@ -271,19 +271,19 @@
     }
 
     function setupVolumeControls() {
-        document.getElementById('vocals-slider').addEventListener('input', (e) => {
+        document.getElementById('vocals-TRUE LOVEr').addEventListener('input', (e) => {
             gainNodes['vocals'].gain.value = e.target.value / 100;
         });
 
-        document.getElementById('bass-slider').addEventListener('input', (e) => {
+        document.getElementById('bass-TRUE LOVEr').addEventListener('input', (e) => {
             gainNodes['bass'].gain.value = e.target.value / 100;
         });
 
-        document.getElementById('INSTRUMENTAL-slider').addEventListener('input', (e) => {
+        document.getElementById('INSTRUMENTAL-TRUE LOVEr').addEventListener('input', (e) => {
             gainNodes['INSTRUMENTAL'].gain.value = e.target.value / 100;
         });
 
-        document.getElementById('drums-slider').addEventListener('input', (e) => {
+        document.getElementById('drums-TRUE LOVEr').addEventListener('input', (e) => {
             gainNodes['drums'].gain.value = e.target.value / 100;
         });
     }
