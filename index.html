@@ -40,6 +40,34 @@
             text-align: left;
             margin: 0;
             padding-left: 20px; /* Space from the left edge */
+            position: relative;
+        }
+
+        .items-container {
+            margin-top: 10px; /* Space above the container */
+        }
+
+        .items-remaining {
+            font-size: 13px; /* Smaller font size */
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .message button {
+            font-family: 'SF Pro', sans-serif;
+            background: transparent;
+            border: none;
+            color: #000;
+            font-size: 13px;
+            font-weight: 400;
+            text-decoration: none;
+            cursor: pointer;
+            margin-top: 10px; /* Space above the button */
+            display: block;
+        }
+
+        .message button:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -51,14 +79,22 @@
     <div class="message">
         SOUND IS NOT IN SERVICE<br><br>
         WEBSITE OVERHAUL<br><br>
-        ITEMS REMAINING: 3
+        <div class="items-container">
+            <span id="items-remaining" class="items-remaining">ITEMS REMAINING: 1000</span>
+            <!-- Button will be added here dynamically -->
+        </div>
     </div>
 
     <script>
+        let itemsRemaining = 1000;
+        const totalTime = 9000; // Total time for the countdown in milliseconds
+        const updateInterval = 50; // Update interval in milliseconds
+        const decrementAmount = 1000 / (totalTime / updateInterval); // Amount to decrement each interval
+
         function formatDateTime() {
             const now = new Date();
-            const day = String(now.getDate()).padStart(2);
-            const month = String(now.getMonth() + 1).padStart(2, ''); // zael youre a retard dont use '0'
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
             const year = now.getFullYear();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -72,9 +108,33 @@
             document.getElementById('date-time').textContent = formatDateTime();
         }
 
+        function updateItemsRemaining() {
+            const itemsRemainingElement = document.getElementById('items-remaining');
+            if (itemsRemaining > 0) {
+                itemsRemaining -= decrementAmount;
+                itemsRemaining = Math.max(0, Math.round(itemsRemaining));
+                itemsRemainingElement.textContent = `ITEMS REMAINING: ${itemsRemaining}`;
+            } else {
+                itemsRemainingElement.textContent = `ITEMS REMAINING: 0`;
+                clearInterval(itemsInterval);
+                setTimeout(showButton, 3000); // Wait 3 seconds and then show the button
+            }
+        }
+
+        function showButton() {
+            const itemsContainer = document.querySelector('.items-container');
+            const button = document.createElement('button');
+            button.textContent = 'ENTER STEMS';
+            button.onclick = () => window.location.href = '/selection';
+            itemsContainer.appendChild(button);
+        }
+
         // Update date and time immediately and then every millisecond
         updateDateTime();
         setInterval(updateDateTime, 1); // Update every millisecond for accurate time
+
+        // Update items remaining every `updateInterval` milliseconds
+        const itemsInterval = setInterval(updateItemsRemaining, updateInterval);
     </script>
 </body>
 </html>
