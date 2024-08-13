@@ -139,7 +139,7 @@
             <div class="stem-label" id="bass-label">BASS</div>
             <input type="range" id="bass-slider" min="0" max="100" value="100">
             <div class="stem-label">INSTRUMENTAL</div>
-            <input type="range" id="INSTRUMENTAL-slider" min="0" max="100" value="100">
+            <input type="range" id="Instrumental-slider" min="0" max="100" value="100">
             <div class="stem-label" id="drums-label">DRUMS</div>
             <input type="range" id="drums-slider" min="0" max="100" value="100">
         </div>
@@ -161,17 +161,7 @@
             <li data-track="GET LOST">GET LOST</li>
             <li data-track="TOO EASY">TOO EASY</li>
             <li data-track="FLOWERS">FLOWERS</li>
-            <!-- <li data-track="SECURITY">SECURITY</li>
-            <li data-track="WE DID IT KID">WE DID IT KID</li>
-            <li data-track="PABLO">PABLO</li>
-            <li data-track="LOUIS BAGS">LOUIS BAGS</li>
-            <li data-track="HAPPY">HAPPY</li>
-            <li data-track="SCI-FI">SCI-FI</li>
-            <li data-track="SELFISH">SELFISH</li>
-            <li data-track="LORD LIFT ME UP">LORD LIFT ME UP</li>
-            <li data-track="KEEP IT BURNING">KEEP IT BURNING</li>
-            <li data-track="CITY OF GODS">CITY OF GODS</li>
-            <li data-track="FIRST TIME IN A LONG TIME">FIRST TIME IN A LONG TIME</li> -->
+            <!-- Additional tracks commented out -->
         </ul>
     </div>
 
@@ -179,11 +169,20 @@
         let audioContext;
         let audioElements = {};
         let gainNodes = {};
+        let allAudioLoaded = false;
 
         const loadTracksButton = document.getElementById('load-tracks-button');
         const controlsContainer = document.getElementById('controls-container');
         const showTracklistButton = document.getElementById('show-tracklist-button');
         const blurOverlay = document.getElementById('blur-overlay');
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.id = 'loading-indicator';
+        loadingIndicator.textContent = 'Loading audio files, please wait...';
+        loadingIndicator.style.fontSize = '20px';
+        loadingIndicator.style.fontWeight = 'bold';
+        loadingIndicator.style.color = 'black';
+        loadingIndicator.style.display = 'none';
+        document.body.appendChild(loadingIndicator);
 
         loadTracksButton.addEventListener('click', () => {
             loadTracksButton.style.display = 'none';
@@ -231,12 +230,15 @@
         function initializeAudioContext() {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('AudioContext initialized');
             }
         }
 
         function loadStems(trackName) {
             clearStems();
             initializeAudioContext();
+            allAudioLoaded = false;
+            loadingIndicator.style.display = 'block';
 
             const basePath = tracks[trackName];
             const stemFiles = {
@@ -249,7 +251,7 @@
                 stemFiles.drums = `${basePath}Drums.mp3`;
             }
 
-            let sources = [];
+            const sources = [];
             for (const [stem, file] of Object.entries(stemFiles)) {
                 const audio = new Audio(file);
                 audio.crossOrigin = "anonymous";
@@ -266,7 +268,7 @@
                 if (slider) {
                     gainNode.gain.value = slider.value / 100;
                 } else {
-                    gainNode.gain.value = 1; // Default gain value if slider is not present
+                    gainNode.gain.value = 1;
                 }
 
                 // Store references
@@ -274,14 +276,24 @@
                 gainNodes[stem] = gainNode;
 
                 sources.push(audio);
+                console.log(`Loaded ${stem}: ${file}`);
             }
 
             // Wait for all audio elements to be ready to play
             Promise.all(sources.map(source => new Promise(resolve => {
-                source.oncanplaythrough = resolve;
+                source.oncanplaythrough = () => {
+                    console.log(`Audio can play through: ${source.src}`);
+                    resolve();
+                };
             }))).then(() => {
+                allAudioLoaded = true;
                 document.getElementById('play-button').disabled = false;
                 document.getElementById('pause-button').disabled = false;
+                loadingIndicator.style.display = 'none';
+                console.log('All audio files loaded');
+            }).catch(error => {
+                loadingIndicator.style.display = 'none';
+                console.error('Error loading audio files:', error);
             });
         }
 
@@ -292,11 +304,17 @@
                 delete audioElements[stem];
                 delete gainNodes[stem];
             }
+            console.log('Cleared all stems');
         }
 
         function startAllAudio() {
-            for (const audio of Object.values(audioElements)) {
-                audio.play();
+            if (allAudioLoaded) {
+                for (const audio of Object.values(audioElements)) {
+                    audio.play();
+                }
+                console.log('Started all audio playback');
+            } else {
+                console.log('Cannot start audio, not all files are loaded');
             }
         }
 
@@ -304,6 +322,7 @@
             for (const audio of Object.values(audioElements)) {
                 audio.pause();
             }
+            console.log('Stopped all audio playback');
         }
 
         document.getElementById('play-button').addEventListener('click', () => {
@@ -319,6 +338,7 @@
                 const stem = event.target.id.replace('-slider', '');
                 if (gainNodes[stem]) {
                     gainNodes[stem].gain.value = event.target.value / 100;
+                    console.log(`Updated ${stem} volume to ${event.target.value}`);
                 }
             });
         });
@@ -326,11 +346,13 @@
         function hideBassAndDrums() {
             document.getElementById('bass-slider').style.display = 'none';
             document.getElementById('drums-slider').style.display = 'none';
+            console.log('Hid bass and drums sliders');
         }
 
         function showBassAndDrums() {
             document.getElementById('bass-slider').style.display = 'block';
             document.getElementById('drums-slider').style.display = 'block';
+            console.log('Displayed bass and drums sliders');
         }
     </script>
 </body>

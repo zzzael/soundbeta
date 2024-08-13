@@ -18,6 +18,16 @@
             position: relative;
         }
 
+        #loading-indicator {
+            font-size: 20px;
+            font-weight: bold;
+            color: black; /* Black color for visibility */
+            margin-bottom: 20px;
+            display: none; /* Initially hidden */
+            font-family: 'Helvetica', sans-serif;
+            font-weight: 100; /* Thin font weight */
+        }
+
         #load-tracks-button, #show-tracklist-button {
             font-size: 24px;
             font-weight: bold;
@@ -101,7 +111,6 @@
             background-color: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
             z-index: 1;
-            display: none;
             align-items: center;
             justify-content: center;
         }
@@ -128,10 +137,13 @@
     </style>
 </head>
 <body>
+    <!-- Loading Indicator -->
+    <div id="loading-indicator">Loading audio files, please wait...</div>
+
     <!-- Load Tracks Button -->
     <div id="load-tracks-button">[ LOAD TRACKS ]</div>
 
-    <!-- Controls Container (Initially Hidden) -->
+    <!-- Controls Container -->
     <div id="controls-container">
         <div class="stems">
             <div class="stem-label">VOCALS</div>
@@ -144,16 +156,16 @@
             <input type="range" id="drums-slider" min="0" max="100" value="100">
         </div>
 
-        <!-- Move buttons below sliders -->
+        <!-- Controls -->
         <div class="controls">
-            <button id="pause-button">[ PAUSE ]</button>
-            <button id="play-button">[ PLAY ]</button>
+            <button id="pause-button" disabled>[ PAUSE ]</button>
+            <button id="play-button" disabled>[ PLAY ]</button>
         </div>
 
         <div id="show-tracklist-button">[ SHOW TRACKLIST ]</div>
     </div>
 
-    <!-- Blur Overlay with Tracklist (Initially Hidden) -->
+    <!-- Blur Overlay with Tracklist -->
     <div class="blur-overlay" id="blur-overlay">
         <ul class="tracklist">
             <li data-track="SLIDE">SLIDE</li>
@@ -161,29 +173,23 @@
             <li data-track="FIELD TRIP">FIELD TRIP</li>
             <li data-track="FRIED">FRIED</li>
             <li data-track="ISABELLA">ISABELLA</li>
-            <!-- <li data-track="PROMOTION">PROMOTION</li>
-            <li data-track="HUSBAND">HUSBAND</li>
-            <li data-track="LIFESTYLE">LIFESTYLE</li> -->
-            <!-- <li data-track="FOREVER">FOREVER</li> -->
             <li data-track="BOMB">BOMB</li>
-            <!-- <li data-track="RIVER">RIVER</li>
-            <li data-track="530">530</li>
-            <li data-track="DEAD">DEAD</li>
-            <li data-track="FOREVER ROLLING">FOREVER ROLLING</li>
-            <li data-track="SKY CITY">SKY CITY</li>
-            <li data-track="MY SOUL">MY SOUL</li> -->
         </ul>
     </div>
 
     <script>
         let audioContext;
-        let audioElements = {};
+        let audioBuffers = {};
         let gainNodes = {};
+        let allAudioLoaded = false;
 
         const loadTracksButton = document.getElementById('load-tracks-button');
         const controlsContainer = document.getElementById('controls-container');
         const showTracklistButton = document.getElementById('show-tracklist-button');
         const blurOverlay = document.getElementById('blur-overlay');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const playButton = document.getElementById('play-button');
+        const pauseButton = document.getElementById('pause-button');
 
         loadTracksButton.addEventListener('click', () => {
             loadTracksButton.style.display = 'none';
@@ -201,17 +207,7 @@
             "FIELD TRIP": "./vultures2/FIELD_TRIP/",
             "FRIED": "./vultures2/FRIED/",
             "ISABELLA": "./vultures2/ISABELLA/",
-            // "PROMOTION": "/vultures2/PROMOTION/",
-            // "HUSBAND": "/vultures2/HUSBAND/",
-            // "LIFESTYLE": "/vultures2/LIFESTYLE/",
-            // "FOREVER": "/vultures2/FOREVER/",
             "BOMB": "./vultures2/BOMB/"
-            // "RIVER": "/vultures2/RIVER/",
-            // "530": "/vultures2/530/",
-            // "DEAD": "/vultures2/DEAD/",
-            // "FOREVER ROLLING": "/vultures2/FOREVER_ROLLING/",
-            // "SKY CITY": "/vultures2/SKY_CITY/",
-            // "MY SOUL": "/vultures2/MY_SOUL/"
         };
 
         document.querySelectorAll('.tracklist li').forEach(track => {
@@ -239,9 +235,17 @@
             }
         }
 
-        function loadStems(trackName) {
+        async function loadAudioBuffer(url) {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            return audioContext.decodeAudioData(arrayBuffer);
+        }
+
+        async function loadStems(trackName) {
             clearStems();
             initializeAudioContext();
+            allAudioLoaded = false;
+            loadingIndicator.style.display = 'block';  // Show the loading indicator
 
             const basePath = tracks[trackName];
             const stemFiles = {
@@ -251,33 +255,37 @@
                 drums: `${basePath}drums.wav`
             };
 
-            let sources = [];
-            for (const [stem, path] of Object.entries(stemFiles)) {
-                const audio = new Audio(path);
-                audio.loop = true;
-
-                // Create MediaElementSource and connect it to a GainNode
-                const track = audioContext.createMediaElementSource(audio);
-                const gainNode = audioContext.createGain();
-                track.connect(gainNode).connect(audioContext.destination);
-
-                // Set initial volume based on the slider
-                gainNode.gain.value = document.getElementById(`${stem}-slider`).value / 100;
-
-                // Store references
-                audioElements[stem] = audio;
-                gainNodes[stem] = gainNode;
-
-                sources.push(audio);
-            }
-
-            // Wait for all audio elements to be ready to play
-            Promise.all(sources.map(source => new Promise(resolve => {
-                source.oncanplaythrough = resolve;
-            }))).then(() => {
-                document.getElementById('play-button').disabled = false;
-                document.getElementById('pause-button').disabled = false;
+            const loadPromises = Object.entries(stemFiles).map(async ([stem, path]) => {
+                try {
+                    audioBuffers[stem] = await loadAudioBuffer(path);
+                    console.log(`Loaded ${stem}`);
+                } catch (error) {
+                    console.error(`Failed to load ${stem}:`, error);
+                }
             });
+
+            Promise.all(loadPromises).then(() => {
+                setupAudioNodes();
+                allAudioLoaded = true;
+                loadingIndicator.style.display = 'none';  // Hide the loading indicator
+                playButton.disabled = false;
+                pauseButton.disabled = false;
+            }).catch(error => {
+                console.error('Error loading audio files:', error);
+                loadingIndicator.textContent = "Error loading audio files.";
+            });
+        }
+
+        function setupAudioNodes() {
+            for (const [stem, buffer] of Object.entries(audioBuffers)) {
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                const gainNode = audioContext.createGain();
+                source.connect(gainNode).connect(audioContext.destination);
+                gainNodes[stem] = gainNode;
+                source.loop = true;
+                source.start(0); // Start playback
+            }
 
             setupVolumeControls();
         }
@@ -301,30 +309,36 @@
         }
 
         function clearStems() {
-            for (const stem in audioElements) {
-                if (audioElements[stem]) {
-                    audioElements[stem].pause();
-                    audioElements[stem].currentTime = 0;
+            for (const stem in gainNodes) {
+                if (gainNodes[stem]) {
+                    gainNodes[stem].disconnect();
                 }
             }
-            audioElements = {};
+            audioBuffers = {};
             gainNodes = {};
+            playButton.disabled = true;
+            pauseButton.disabled = true;
         }
 
         function startAllAudio() {
-            for (const audio of Object.values(audioElements)) {
-                audio.play();
+            if (allAudioLoaded) {
+                for (const [stem, buffer] of Object.entries(audioBuffers)) {
+                    const source = audioContext.createBufferSource();
+                    source.buffer = buffer;
+                    const gainNode = audioContext.createGain();
+                    source.connect(gainNode).connect(audioContext.destination);
+                    gainNodes[stem] = gainNode;
+                    source.loop = true;
+                    source.start(0); // Start playback
+                }
             }
         }
 
         function stopAllAudio() {
-            for (const audio of Object.values(audioElements)) {
-                audio.pause();
+            for (const [stem, gainNode] of Object.entries(gainNodes)) {
+                gainNode.disconnect();
             }
         }
-
-        const playButton = document.getElementById('play-button');
-        const pauseButton = document.getElementById('pause-button');
 
         playButton.addEventListener('click', () => {
             startAllAudio();
